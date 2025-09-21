@@ -1,25 +1,26 @@
-import { env, Uri } from "vscode";
-import fsPromises = require("node:fs/promises");
+import { env, Uri, workspace } from "vscode";
 import path = require("node:path");
 
 import { Config } from "./config";
 
-export function onDidCreateImageFile(uri: Uri) {
-    const oldFilePath = uri.fsPath;
-    const newFilePath = getNewFilePath(oldFilePath);
+export function onDidCreateImageFile(oldFileUri: Uri) {
+    const newFileUri = genNewFileUri(oldFileUri);
 
-    fsPromises
-        .rename(oldFilePath, newFilePath)
-        .then(() => writeToClipboard(newFilePath))
-        .catch((why) => console.log(why));
+    workspace
+        .fs
+        .rename(oldFileUri, newFileUri, { overwrite: false })
+        .then(() => writeToClipboard(newFileUri));
 }
 
-function getNewFilePath(oldPath: string): string {
-    return path.format({
-        dir: path.dirname(oldPath),
+function genNewFileUri(oldFileUri: Uri): Uri {
+    const oldFilePath = oldFileUri.path;
+    const newFilePath = path.format({
+        dir: path.dirname(oldFilePath),
         name: getTimeAsString(),
-        ext: path.extname(oldPath),
+        ext: path.extname(oldFilePath),
     });
+
+    return Uri.file(newFilePath);
 }
 
 function getTimeAsString(): string {
@@ -44,8 +45,8 @@ function zeroPad(num: number): string {
     return String(num).padStart(2, "0");
 }
 
-function writeToClipboard(newFilePath: string) {
-    const base = path.basename(newFilePath);
+function writeToClipboard(newFileUri: Uri) {
+    const base = path.basename(newFileUri.path);
     const content = `![](/images/${base})`;
 
     env.clipboard.writeText(content);
