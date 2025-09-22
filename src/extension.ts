@@ -4,6 +4,13 @@ import { onDidCreateImageFile } from "./onDidCreateImageFile";
 
 let watcher: FileSystemWatcher | undefined = undefined;
 export function activate(context: ExtensionContext) {
+    workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration("auto-image-md")) {
+            disposeWatcher();
+            setup();
+        }
+    });
+
     setup();
 }
 
@@ -25,7 +32,7 @@ function readConfig(): Config {
     let source = workspace.getConfiguration("auto-image-md");
     config.pathToImageDir = source.get("pathToImageDir");
 
-    console.log(`readConfig: ${config.pathToImageDir}`);
+    console.log(`[READ CONFIG] path to image directory: ${config.pathToImageDir}`);
 
     return config;
 }
