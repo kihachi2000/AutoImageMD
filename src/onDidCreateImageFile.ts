@@ -1,15 +1,14 @@
 import { env, Uri, workspace } from "vscode";
 import path = require("node:path");
-
 import { Config } from "./config";
 
-export function onDidCreateImageFile(oldFileUri: Uri) {
+export function onDidCreateImageFile(config: Config, oldFileUri: Uri) {
     const newFileUri = genNewFileUri(oldFileUri);
 
     workspace
         .fs
         .rename(oldFileUri, newFileUri, { overwrite: false })
-        .then(() => writeToClipboard(newFileUri));
+        .then(() => writeToClipboard(config, newFileUri));
 }
 
 function genNewFileUri(oldFileUri: Uri): Uri {
@@ -45,9 +44,12 @@ function zeroPad(num: number): string {
     return String(num).padStart(2, "0");
 }
 
-function writeToClipboard(newFileUri: Uri) {
-    const base = path.basename(newFileUri.path);
-    const content = `![](/images/${base})`;
+function writeToClipboard(config: Config, newFileUri: Uri) {
+    const pathToImageFile = path.join(
+        config.pathToImageDir!,
+        path.basename(newFileUri.path),
+    );
 
+    const content = `![](${pathToImageFile})`;
     env.clipboard.writeText(content);
 }

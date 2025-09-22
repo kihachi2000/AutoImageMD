@@ -1,3 +1,3 @@
 export type Config = {
-    pathToImageDirFromWorkspaceRoot: string,
+    pathToImageDir: string | undefined,
 };
